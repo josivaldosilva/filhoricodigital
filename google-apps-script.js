@@ -27,7 +27,7 @@
  */
 
 /* ── CONFIGURAÇÃO — só precisas de alterar aqui ── */
-var EMAIL_NOTIFICACAO = '@gmail.com'; // ← muda para o teu email
+var EMAIL_NOTIFICACAO = 'maurocoxi8@gmail.com'; // ← muda para o teu email
 var NOME_DA_FOLHA     = 'Leads';
 
 /* ── Colunas do Sheets ───────────────────────────── */
