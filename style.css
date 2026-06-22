@@ -1,0 +1,1065 @@
+/* ============================================
+   Filho Rico Digital — style.css
+   Marketing Digital, Vendas e Edição de Vídeo
+   ============================================ */
+
+/* ---------- 1. Tokens ---------- */
+:root {
+  /* Cores */
+  --cor-fundo: #0A0A0A;
+  --cor-fundo-alt: #121212;
+  --cor-card: #161616;
+  --cor-borda: #2A2A2A;
+  --cor-texto: #F2F0EA;
+  --cor-texto-suave: #B8B5AC;
+  --cor-dourado: #FFD700;
+  --cor-dourado-suave: #E8C547;
+  --cor-erro: #FF6B6B;
+  --cor-sucesso: #3DDC97;
+
+  /* Tipografia */
+  --fonte-display: 'Sora', 'Segoe UI', sans-serif;
+  --fonte-corpo: 'Inter', 'Segoe UI', sans-serif;
+
+  /* Layout */
+  --largura-maxima: 1180px;
+  --raio: 14px;
+  --raio-pequeno: 8px;
+  --espaco-secao: clamp(64px, 8vw, 120px);
+  --sombra: 0 20px 50px rgba(0, 0, 0, 0.45);
+  --transicao: 0.25s ease;
+}
+
+/* ---------- 2. Reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: var(--fonte-corpo);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--fonte-display);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--cor-dourado);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--largura-maxima);
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+/* ---------- 3. Header / Navegação ---------- */
+.header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  background: rgba(10, 10, 10, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--cor-borda);
+  transition: background var(--transicao);
+}
+
+.nav {
+  max-width: var(--largura-maxima);
+  margin-inline: auto;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-family: var(--fonte-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.logo-rico {
+  color: var(--cor-texto);
+}
+
+.logo-digital {
+  color: var(--cor-dourado);
+  margin-left: 4px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-links a {
+  font-size: 0.95rem;
+  color: var(--cor-texto-suave);
+  transition: color var(--transicao);
+}
+
+.nav-links a:hover {
+  color: var(--cor-dourado);
+}
+
+.nav-links .btn-nav {
+  padding: 10px 22px;
+  border: 1px solid var(--cor-dourado);
+  border-radius: 999px;
+  color: var(--cor-dourado);
+}
+
+.nav-links .btn-nav:hover {
+  background: var(--cor-dourado);
+  color: #0A0A0A;
+}
+
+.menu-mobile {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.menu-mobile span {
+  width: 24px;
+  height: 2px;
+  background: var(--cor-texto);
+  border-radius: 2px;
+}
+
+/* ---------- 4. Hero ---------- */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 140px 24px 80px;
+  overflow: hidden;
+}
+
+.hero-content {
+  max-width: 720px;
+  margin-inline: auto;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.hero h1 {
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  margin-bottom: 24px;
+}
+
+.hero .destaque {
+  color: var(--cor-dourado);
+}
+
+.hero-content p {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: var(--cor-texto-suave);
+  max-width: 580px;
+  margin-inline: auto 24px;
+  margin-bottom: 36px;
+}
+
+.hero-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+.hero-grafismo {
+  position: absolute;
+  inset: -20% -10% auto auto;
+  width: 60vw;
+  height: 60vw;
+  max-width: 700px;
+  max-height: 700px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.18), transparent 70%);
+  filter: blur(40px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ---------- 5. Botões ---------- */
+.btn-principal,
+.btn-secundario,
+.btn-plano {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 32px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--transicao), box-shadow var(--transicao), background var(--transicao), color var(--transicao);
+  border: none;
+}
+
+.btn-principal {
+  background: var(--cor-dourado);
+  color: #0A0A0A;
+}
+
+.btn-principal:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+}
+
+.btn-secundario {
+  background: transparent;
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto);
+}
+
+.btn-secundario:hover {
+  border-color: var(--cor-dourado);
+  color: var(--cor-dourado);
+}
+
+.btn-plano {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto);
+  margin-top: 28px;
+}
+
+.btn-plano:hover {
+  border-color: var(--cor-dourado);
+  color: var(--cor-dourado);
+}
+
+.destaque-preco .btn-plano {
+  background: var(--cor-dourado);
+  border-color: var(--cor-dourado);
+  color: #0A0A0A;
+}
+
+.destaque-preco .btn-plano:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.25);
+}
+
+/* ---------- 6. Secções genéricas ---------- */
+section {
+  padding: var(--espaco-secao) 0;
+}
+
+section h2 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.subtitulo {
+  text-align: center;
+  color: var(--cor-texto-suave);
+  max-width: 520px;
+  margin: 0 auto 56px;
+}
+
+/* ---------- 7. Sobre ---------- */
+.sobre {
+  background: var(--cor-fundo-alt);
+}
+
+.sobre-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+
+.sobre-texto h2 {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.sobre-texto p {
+  color: var(--cor-texto-suave);
+  margin-bottom: 16px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 36px;
+  padding-top: 32px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat strong {
+  font-family: var(--fonte-display);
+  font-size: 1.8rem;
+  color: var(--cor-dourado);
+}
+
+.stat span {
+  font-size: 0.85rem;
+  color: var(--cor-texto-suave);
+}
+
+.sobre-fundadores {
+  display: grid;
+  gap: 16px;
+}
+
+.card-fundador {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--cor-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 18px 20px;
+  transition: border-color var(--transicao);
+}
+
+.card-fundador:hover {
+  border-color: var(--cor-dourado-suave);
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--cor-dourado), #8a6d00);
+}
+
+.card-fundador h3 {
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.card-fundador span {
+  font-size: 0.82rem;
+  color: var(--cor-texto-suave);
+}
+
+/* ---------- 8. Serviços ---------- */
+.servicos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.card-servico {
+  background: var(--cor-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 36px 28px;
+  transition: transform var(--transicao), border-color var(--transicao);
+}
+
+.card-servico:hover {
+  transform: translateY(-6px);
+  border-color: var(--cor-dourado-suave);
+}
+
+.icone-servico {
+  font-size: 2rem;
+  margin-bottom: 18px;
+}
+
+.card-servico h3 {
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+}
+
+.card-servico > p {
+  color: var(--cor-texto-suave);
+  font-size: 0.92rem;
+  margin-bottom: 20px;
+}
+
+.card-servico ul {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--cor-borda);
+  padding-top: 18px;
+}
+
+.card-servico li {
+  font-size: 0.88rem;
+  color: var(--cor-texto-suave);
+  padding-left: 20px;
+  position: relative;
+}
+
+.card-servico li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cor-dourado);
+}
+
+/* ---------- 9. Preços ---------- */
+.precos {
+  background: var(--cor-fundo-alt);
+}
+
+.precos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.card-preco {
+  position: relative;
+  background: var(--cor-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 36px 28px;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transicao);
+}
+
+.card-preco h3 {
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+}
+
+.card-preco > p {
+  color: var(--cor-texto-suave);
+  font-size: 0.88rem;
+  margin-bottom: 24px;
+}
+
+.preco-valor {
+  font-family: var(--fonte-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--cor-dourado);
+  margin-bottom: 4px;
+}
+
+.preco-valor span {
+  font-family: var(--fonte-corpo);
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--cor-texto-suave);
+}
+
+.card-preco ul {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-grow: 1;
+}
+
+.card-preco li {
+  font-size: 0.88rem;
+  color: var(--cor-texto-suave);
+  padding-left: 20px;
+  position: relative;
+}
+
+.card-preco li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--cor-dourado);
+  font-weight: 700;
+}
+
+.destaque-preco {
+  border-color: var(--cor-dourado);
+  box-shadow: 0 0 0 1px var(--cor-dourado), var(--sombra);
+  transform: scale(1.03);
+}
+
+.destaque-preco:hover {
+  transform: scale(1.03) translateY(-4px);
+}
+
+.selo {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  translate: -50% 0;
+  background: var(--cor-dourado);
+  color: #0A0A0A;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ---------- 10. Blog ---------- */
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.post {
+  background: var(--cor-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  overflow: hidden;
+  transition: transform var(--transicao), border-color var(--transicao);
+  display: flex;
+  flex-direction: column;
+}
+
+.post:hover {
+  transform: translateY(-6px);
+  border-color: var(--cor-dourado-suave);
+}
+
+.post-img {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+}
+
+.post-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-grow: 1;
+}
+
+.post-tag {
+  align-self: flex-start;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cor-dourado);
+  background: rgba(255, 215, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.post-content h3 {
+  font-size: 1.05rem;
+}
+
+.post-content p {
+  color: var(--cor-texto-suave);
+  font-size: 0.88rem;
+  flex-grow: 1;
+}
+
+.ler-mais {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--cor-dourado);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ler-mais:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 11. Instagram ---------- */
+.insta-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.insta-post {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: var(--raio-pequeno);
+  background: linear-gradient(135deg, #2a2a2a, #161616);
+  transition: opacity var(--transicao);
+}
+
+.insta-post:hover {
+  opacity: 0.7;
+}
+
+.btn-insta {
+  display: flex;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+/* ---------- 12. Contato ---------- */
+.contato-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+
+.contato-texto h2 {
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.contato-texto > p {
+  color: var(--cor-texto-suave);
+  margin-bottom: 32px;
+}
+
+.contato-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  gap: 8px;
+  font-size: 0.92rem;
+  flex-wrap: wrap;
+}
+
+.info-item strong {
+  color: var(--cor-dourado);
+}
+
+.info-item a:hover {
+  text-decoration: underline;
+}
+
+.form-contato {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--cor-card);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 32px;
+}
+
+.form-contato input,
+.form-contato select,
+.form-contato textarea {
+  width: 100%;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-pequeno);
+  padding: 13px 16px;
+  color: var(--cor-texto);
+  font-size: 0.92rem;
+  font-family: inherit;
+  transition: border-color var(--transicao);
+}
+
+.form-contato input::placeholder,
+.form-contato textarea::placeholder {
+  color: var(--cor-texto-suave);
+}
+
+.form-contato input:focus,
+.form-contato select:focus,
+.form-contato textarea:focus {
+  border-color: var(--cor-dourado);
+}
+
+.form-contato textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-contato select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--cor-texto-suave) 50%),
+    linear-gradient(135deg, var(--cor-texto-suave) 50%, transparent 50%);
+  background-position: calc(100% - 20px) center, calc(100% - 15px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.erro-campo {
+  display: block;
+  min-height: 16px;
+  color: var(--cor-erro);
+  font-size: 0.78rem;
+  margin-top: -8px;
+}
+
+#formStatus {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: none;
+}
+
+#formStatus.status-sucesso {
+  display: block;
+  color: var(--cor-sucesso);
+}
+
+#formStatus.status-erro {
+  display: block;
+  color: var(--cor-erro);
+}
+
+/* ---------- 13. Footer ---------- */
+.footer {
+  border-top: 1px solid var(--cor-borda);
+  padding: 64px 0 24px;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 48px;
+}
+
+.footer-logo p {
+  color: var(--cor-texto-suave);
+  font-size: 0.88rem;
+  margin-top: 12px;
+  max-width: 280px;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-links h4 {
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.footer-links a {
+  color: var(--cor-texto-suave);
+  font-size: 0.88rem;
+  transition: color var(--transicao);
+}
+
+.footer-links a:hover {
+  color: var(--cor-dourado);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--cor-borda);
+  padding-top: 24px;
+  text-align: center;
+}
+
+.footer-bottom p {
+  font-size: 0.8rem;
+  color: var(--cor-texto-suave);
+}
+
+/* ---------- 14. WhatsApp flutuante ---------- */
+.whatsapp-flutuante {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--cor-dourado);
+  border: none;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--sombra);
+  z-index: 90;
+  transition: transform var(--transicao);
+}
+
+.whatsapp-flutuante:hover {
+  transform: scale(1.08);
+}
+
+/* ---------- 15. Responsivo ---------- */
+@media (max-width: 960px) {
+  .sobre-grid,
+  .contato-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .servicos-grid,
+  .precos-grid,
+  .blog-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .destaque-preco {
+    transform: none;
+  }
+
+  .destaque-preco:hover {
+    transform: translateY(-4px);
+  }
+}
+
+@media (max-width: 720px) {
+  .nav-links {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background: rgba(10, 10, 10, 0.98);
+    border-bottom: 1px solid var(--cor-borda);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 8px 24px 20px;
+    display: none;
+  }
+
+  .nav-links.aberto {
+    display: flex;
+  }
+
+  .nav-links li {
+    width: 100%;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .nav-links .btn-nav {
+    display: inline-block;
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  .menu-mobile {
+    display: flex;
+  }
+
+  .servicos-grid,
+  .precos-grid,
+  .blog-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .insta-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .destaque-preco {
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding-top: 120px;
+  }
+
+  .form-contato {
+    padding: 24px 20px;
+  }
+
+  .whatsapp-flutuante {
+    width: 52px;
+    height: 52px;
+    bottom: 20px;
+    right: 20px;
+  }
+}
+
+/* ---------- 16. Classes ausentes corrigidas ---------- */
+
+/* Secção Instagram */
+.instagram {
+  background: var(--cor-fundo-alt);
+}
+
+/* Texto lateral da secção Sobre */
+.sobre-texto {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Texto lateral da secção Contato */
+.contato-texto {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Logo no footer */
+.footer-logo {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Botão de escolha de plano (alias de .btn-plano — ambas são usadas no HTML) */
+.btn-escolher-plano {
+  width: 100%;
+  padding: 14px 32px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto);
+  margin-top: 28px;
+  transition: border-color var(--transicao), color var(--transicao), transform var(--transicao), box-shadow var(--transicao);
+}
+
+.btn-escolher-plano:hover {
+  border-color: var(--cor-dourado);
+  color: var(--cor-dourado);
+}
+
+.destaque-preco .btn-escolher-plano {
+  background: var(--cor-dourado);
+  border-color: var(--cor-dourado);
+  color: #0A0A0A;
+}
+
+.destaque-preco .btn-escolher-plano:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.25);
+}
+
+/* Botão "Ler artigo" do blog */
+.btn-ler-artigo {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--cor-dourado);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.btn-ler-artigo:hover {
+  text-decoration: underline;
+}
+
+/* Estados do formStatus: sucesso, erro, aviso, info */
+#formStatus.status-sucesso {
+  display: block;
+  color: var(--cor-sucesso);
+}
+
+#formStatus.status-erro {
+  display: block;
+  color: var(--cor-erro);
+}
+
+#formStatus.status-aviso {
+  display: block;
+  color: var(--cor-dourado-suave);
+}
+
+#formStatus.status-info {
+  display: block;
+  color: var(--cor-texto-suave);
+}
