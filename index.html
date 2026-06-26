@@ -341,6 +341,14 @@
           </div>
 
           <form class="form-contato" id="formContato" novalidate>
+            <div class="campo-antispam" aria-hidden="true">
+              <label for="empresa">Empresa</label>
+              <input type="text" id="empresa" name="empresa" tabindex="-1" autocomplete="off">
+            </div>
+            <input type="hidden" name="tokenSeguranca" value="">
+            <input type="hidden" name="tempoInicio" value="">
+            <input type="hidden" name="nonceCliente" value="">
+
             <label for="nome" class="sr-only">Nome</label>
             <input type="text" id="nome" name="nome" placeholder="Teu Nome" autocomplete="name" required>
             <span class="erro-campo" id="erroNome" role="alert"></span>
@@ -361,9 +369,11 @@
               <option value="edicaoVideo">Edição de Vídeo</option>
               <option value="pacoteCompleto">Pacote Completo</option>
             </select>
+            <span class="erro-campo" id="erroServico" role="alert"></span>
 
             <label for="mensagem" class="sr-only">Descrição do projeto</label>
             <textarea id="mensagem" name="mensagem" placeholder="Conta sobre teu projeto" rows="4"></textarea>
+            <span class="erro-campo" id="erroMensagem" role="alert"></span>
 
             <button type="submit" class="btn-principal">Solicitar Análise Gratuita</button>
             <p id="formStatus" role="status" aria-live="polite"></p>

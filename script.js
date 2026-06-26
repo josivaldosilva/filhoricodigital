@@ -8,6 +8,27 @@
 
 const WHATSAPP_NUMERO   = '244929054513';
 const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzAW5D8neHgDf9AAgaOP4y2Ctt2J0PBHZWaXN1EsGZOJnJ0ihb9frsyF9CuoMylN0DBMw/exec';
+const FORM_SECURITY_TOKEN = 'frd-leads-v1-9c7a63b5a4d2';
+const FORM_SECURITY_MIN_MS = 2000;
+const FORM_SECURITY_MAX_MS = 30 * 60 * 1000;
+const FORM_COOLDOWN_MS = 45 * 1000;
+const STORAGE_ULTIMO_ENVIO = 'filhoRicoUltimoLeadMs';
+const SERVICOS_PERMITIDOS = Object.freeze({
+  marketingDigital: 'Marketing Digital',
+  comercializacao: 'Comercialização de Produtos',
+  edicaoVideo: 'Edição de Vídeo',
+  pacoteCompleto: 'Pacote Completo',
+});
+const LIMITES_FORMULARIO = Object.freeze({
+  nomeMin: 2,
+  nomeMax: 80,
+  emailMax: 254,
+  whatsappMin: 9,
+  whatsappMax: 15,
+  mensagemMax: 600,
+});
+
+let envioEmAndamento = false;
 
 /* ── Inicialização ───────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
@@ -124,13 +145,30 @@ function inicializarFormularioContato() {
   const formulario = document.getElementById('formContato');
   if (!formulario) return;
 
+  prepararProtecoesFormulario(formulario);
+
   formulario.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    const statusEl = document.getElementById('formStatus');
+    if (envioEmAndamento) return;
+
+    if (estaEmCooldownLocal()) {
+      exibirStatus(statusEl, 'Aguarda alguns segundos antes de enviar outro pedido.', 'aviso');
+      return;
+    }
 
     const dadosLead = capturarDadosFormulario(formulario);
     if (!dadosLead) return; // Validação falhou — mensagens já visíveis
 
-    await enviarLead(dadosLead, formulario);
+    envioEmAndamento = true;
+    registrarEnvioLocal();
+
+    try {
+      await enviarLead(dadosLead, formulario);
+    } finally {
+      envioEmAndamento = false;
+    }
   });
 }
 
@@ -144,17 +182,30 @@ function inicializarFormularioContato() {
 function capturarDadosFormulario(formulario) {
   const campo = (id) => formulario.querySelector(id);
 
-  const nome     = campo('#nome')?.value.trim()      ?? '';
-  const email    = campo('#email')?.value.trim()     ?? '';
-  const whatsapp = campo('#whatsapp')?.value.trim()  ?? '';
-  const servico  = campo('#servicos')?.value         ?? '';
-  const mensagem = campo('#mensagem')?.value.trim()  ?? '';
+  const nomeRaw     = campo('#nome')?.value          ?? '';
+  const emailRaw    = campo('#email')?.value         ?? '';
+  const whatsappRaw = campo('#whatsapp')?.value      ?? '';
+  const servico     = campo('#servicos')?.value      ?? '';
+  const mensagemRaw = campo('#mensagem')?.value      ?? '';
+  const honeypot    = campo('[name="empresa"]')?.value.trim() ?? '';
+  const token       = campo('[name="tokenSeguranca"]')?.value ?? '';
+  const tempoInicio = Number(campo('[name="tempoInicio"]')?.value ?? 0);
+  const nonce       = campo('[name="nonceCliente"]')?.value ?? '';
+
+  const nome     = sanitizarTextoCliente(nomeRaw, LIMITES_FORMULARIO.nomeMax);
+  const email    = sanitizarTextoCliente(emailRaw, LIMITES_FORMULARIO.emailMax).toLowerCase();
+  const whatsapp = sanitizarTextoCliente(whatsappRaw, 32);
+  const mensagem = sanitizarTextoCliente(mensagemRaw, LIMITES_FORMULARIO.mensagemMax);
 
   limparErros(formulario);
 
+  if (!validarProtecoesFormulario(formulario, honeypot, token, tempoInicio, nonce)) {
+    return null;
+  }
+
   let valido = true;
 
-  if (nome.length < 2) {
+  if (!validarNome(nome)) {
     mostrarErro('erroNome', 'Por favor, indica o teu nome completo.');
     valido = false;
   }
@@ -169,25 +220,164 @@ function capturarDadosFormulario(formulario) {
     valido = false;
   }
 
+  if (!validarServico(servico)) {
+    mostrarErro('erroServico', 'Escolhe um servico valido.');
+    valido = false;
+  }
+
+  if (!validarMensagem(mensagem)) {
+    mostrarErro('erroMensagem', 'A mensagem deve ter ate 600 caracteres e sem links suspeitos.');
+    valido = false;
+  }
+
   if (!valido) return null;
 
   return {
     nome,
     email,
-    whatsapp,
-    servico:   servico  || 'Não especificado',
+    whatsapp: normalizarWhatsapp(whatsapp),
+    servico:   SERVICOS_PERMITIDOS[servico],
+    servicoCodigo: servico,
     mensagem:  mensagem || 'Sem mensagem.',
     dataEnvio: formatarData(new Date()),
-    origem:    'Website — Formulário de Contato',
+    origem:    'Website - Formulario de Contato',
+    tokenSeguranca: token,
+    tempoInicio: String(tempoInicio),
+    nonceCliente: nonce,
   };
 }
 
 function validarEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return email.length <= LIMITES_FORMULARIO.emailMax
+    && /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)
+    && !contemPadraoPerigoso(email);
 }
 
 function validarWhatsapp(numero) {
-  return numero.replace(/\D/g, '').length >= 9;
+  const digitos = numero.replace(/\D/g, '').replace(/^00/, '');
+  return digitos.length >= LIMITES_FORMULARIO.whatsappMin
+    && digitos.length <= LIMITES_FORMULARIO.whatsappMax;
+}
+
+function validarNome(nome) {
+  const letras = nome.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ]/g, '');
+  return nome.length >= LIMITES_FORMULARIO.nomeMin
+    && nome.length <= LIMITES_FORMULARIO.nomeMax
+    && letras.length >= LIMITES_FORMULARIO.nomeMin
+    && !/[<>{}\[\]\\]/.test(nome)
+    && !contemPadraoPerigoso(nome);
+}
+
+function validarServico(servico) {
+  return Object.prototype.hasOwnProperty.call(SERVICOS_PERMITIDOS, servico);
+}
+
+function validarMensagem(mensagem) {
+  if (!mensagem) return true;
+  return mensagem.length <= LIMITES_FORMULARIO.mensagemMax
+    && contarLinks(mensagem) <= 2
+    && !contemPadraoPerigoso(mensagem);
+}
+
+function validarProtecoesFormulario(formulario, honeypot, token, tempoInicio, nonce) {
+  const statusEl = document.getElementById('formStatus');
+  const idadeFormulario = Date.now() - tempoInicio;
+
+  if (honeypot) {
+    exibirStatus(statusEl, 'Nao foi possivel validar o envio.', 'erro');
+    prepararProtecoesFormulario(formulario);
+    return false;
+  }
+
+  if (token !== FORM_SECURITY_TOKEN || !validarNonce(nonce) || !Number.isFinite(idadeFormulario)) {
+    exibirStatus(statusEl, 'Sessao do formulario invalida. Atualiza a pagina e tenta novamente.', 'erro');
+    prepararProtecoesFormulario(formulario);
+    return false;
+  }
+
+  if (idadeFormulario < FORM_SECURITY_MIN_MS) {
+    exibirStatus(statusEl, 'Aguarda um instante antes de enviar.', 'aviso');
+    return false;
+  }
+
+  if (idadeFormulario > FORM_SECURITY_MAX_MS) {
+    exibirStatus(statusEl, 'Formulario expirado. Tenta novamente.', 'aviso');
+    prepararProtecoesFormulario(formulario);
+    return false;
+  }
+
+  return true;
+}
+
+function prepararProtecoesFormulario(formulario) {
+  definirValorOculto(formulario, 'tokenSeguranca', FORM_SECURITY_TOKEN);
+  definirValorOculto(formulario, 'tempoInicio', String(Date.now()));
+  definirValorOculto(formulario, 'nonceCliente', gerarNonceCliente());
+  definirValorOculto(formulario, 'empresa', '');
+}
+
+function definirValorOculto(formulario, nome, valor) {
+  const campo = formulario.querySelector(`[name="${nome}"]`);
+  if (campo) campo.value = valor;
+}
+
+function gerarNonceCliente() {
+  if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+    const bytes = new Uint32Array(4);
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes, (parte) => parte.toString(16).padStart(8, '0')).join('');
+  }
+
+  return `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
+}
+
+function validarNonce(nonce) {
+  return /^[a-f0-9]{16,64}$/i.test(nonce);
+}
+
+function sanitizarTextoCliente(valor, limite) {
+  let texto = String(valor || '');
+  if (typeof texto.normalize === 'function') {
+    texto = texto.normalize('NFKC');
+  }
+
+  return texto
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/[<>]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, limite);
+}
+
+function normalizarWhatsapp(numero) {
+  const digitos = numero.replace(/\D/g, '').replace(/^00/, '');
+  return `+${digitos}`;
+}
+
+function contarLinks(texto) {
+  const matches = texto.match(/https?:\/\/|www\.|bit\.ly|tinyurl\.com/gi);
+  return matches ? matches.length : 0;
+}
+
+function contemPadraoPerigoso(texto) {
+  return /(<\s*script|javascript:|data:text\/html|on\w+\s*=|union\s+select|drop\s+table|insert\s+into|delete\s+from)/i.test(String(texto || ''));
+}
+
+function estaEmCooldownLocal() {
+  try {
+    const ultimoEnvio = Number(localStorage.getItem(STORAGE_ULTIMO_ENVIO) || 0);
+    return Date.now() - ultimoEnvio < FORM_COOLDOWN_MS;
+  } catch (erro) {
+    return false;
+  }
+}
+
+function registrarEnvioLocal() {
+  try {
+    localStorage.setItem(STORAGE_ULTIMO_ENVIO, String(Date.now()));
+  } catch (erro) {
+    // localStorage pode estar indisponivel em navegacao privada.
+  }
 }
 
 function formatarData(data) {
@@ -221,6 +411,7 @@ async function enviarLead(dadosLead, formulario) {
 
   // Independente do resultado do Sheets, abre o WhatsApp
   formulario.reset();
+  prepararProtecoesFormulario(formulario);
   limparErros(formulario);
 
   if (savedToSheets) {
@@ -263,10 +454,14 @@ async function enviarParaGoogleSheets(dadosLead) {
       nome:      dadosLead.nome,
       email:     dadosLead.email,
       whatsapp:  dadosLead.whatsapp,
-      servico:   dadosLead.servico,
+      servico:   dadosLead.servicoCodigo,
       mensagem:  dadosLead.mensagem,
       dataEnvio: dadosLead.dataEnvio,
       origem:    dadosLead.origem,
+      tokenSeguranca: dadosLead.tokenSeguranca,
+      tempoInicio: dadosLead.tempoInicio,
+      nonceCliente: dadosLead.nonceCliente,
+      empresa: '',
     });
 
     const resposta = await fetch(GOOGLE_SHEETS_URL, {
@@ -275,7 +470,13 @@ async function enviarParaGoogleSheets(dadosLead) {
       body:    corpo.toString(),
     });
 
+    if (!resposta.ok) return false;
+
     const json = await resposta.json();
+    if (json.resultado !== 'sucesso') {
+      console.warn('[Filho Rico] Pedido recusado pelo Apps Script:', json.mensagem);
+    }
+
     return json.resultado === 'sucesso';
 
   } catch (erro) {

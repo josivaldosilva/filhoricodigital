@@ -29,6 +29,27 @@
 /* ── CONFIGURAÇÃO — só precisas de alterar aqui ── */
 var EMAIL_NOTIFICACAO = 'maurocoxi8@gmail.com'; // ← muda para o teu email
 var NOME_DA_FOLHA     = 'Leads';
+var SECURITY_TOKEN    = 'frd-leads-v1-9c7a63b5a4d2';
+
+var TEMPO_MINIMO_ENVIO_MS = 1500;
+var TEMPO_MAXIMO_ENVIO_MS = 30 * 60 * 1000;
+var RATE_LIMIT_SEGUNDOS   = 60;
+
+var SERVICOS_PERMITIDOS = {
+  marketingDigital: 'Marketing Digital',
+  comercializacao: 'Comercialização de Produtos',
+  edicaoVideo: 'Edição de Vídeo',
+  pacoteCompleto: 'Pacote Completo',
+};
+
+var LIMITES_FORMULARIO = {
+  nomeMin: 2,
+  nomeMax: 80,
+  emailMax: 254,
+  whatsappMin: 9,
+  whatsappMax: 15,
+  mensagemMax: 600,
+};
 
 /* ── Colunas do Sheets ───────────────────────────── */
 var CABECALHOS = [
@@ -47,7 +68,14 @@ var CABECALHOS = [
    ═══════════════════════════════════════════════════ */
 function doPost(e) {
   try {
-    var dados = extrairDados(e);
+    var parametros = obterParametros(e);
+
+    validarToken(parametros);
+    validarAntiSpam(parametros);
+
+    var dados = extrairDados(parametros);
+    validarRateLimit(dados);
+
     var folha = obterOuCriarFolha(NOME_DA_FOLHA);
 
     garantirCabecalhos(folha);
@@ -62,17 +90,15 @@ function doPost(e) {
 }
 
 /* ── Extrai e organiza os dados recebidos do site ── */
-function extrairDados(e) {
-  var p = e.parameter;
-
+function extrairDados(p) {
   return {
-    dataEnvio: p.dataEnvio || formatarDataAgora(),
-    nome:      limpar(p.nome),
-    email:     limpar(p.email),
-    whatsapp:  limpar(p.whatsapp),
-    servico:   limpar(p.servico)  || 'Não especificado',
-    mensagem:  limpar(p.mensagem) || 'Sem mensagem.',
-    origem:    limpar(p.origem)   || 'Website',
+    dataEnvio: formatarDataAgora(),
+    nome:      validarNomeEntrada(p.nome),
+    email:     validarEmailEntrada(p.email),
+    whatsapp:  validarWhatsappEntrada(p.whatsapp),
+    servico:   validarServicoEntrada(p.servico),
+    mensagem:  validarMensagemEntrada(p.mensagem),
+    origem:    sanitizarTexto(p.origem, 80) || 'Website',
   };
 }
 
@@ -83,7 +109,10 @@ function extrairDados(e) {
    ═══════════════════════════════════════════════════ */
 function enviarEmailNotificacao(dados) {
 
-  var assunto = '🔔 Novo Lead — ' + dados.nome + ' | Filho Rico Digital';
+  var assunto = limparAssunto('🔔 Novo Lead — ' + dados.nome + ' | Filho Rico Digital');
+  var emailHref = 'mailto:' + encodeURIComponent(dados.email);
+  var whatsappDigits = dados.whatsapp.replace(/\D/g, '');
+  var whatsappHref = 'https://wa.me/' + whatsappDigits;
 
   /* ── Corpo em HTML (aparece formatado no Gmail) ── */
   var corpoHtml = [
@@ -100,8 +129,8 @@ function enviarEmailNotificacao(dados) {
     '    <table style="width:100%;border-collapse:collapse;">',
     linhaTabela('📅 Data',      dados.dataEnvio),
     linhaTabela('👤 Nome',      dados.nome),
-    linhaTabela('📧 Email',     '<a href="mailto:' + dados.email + '" style="color:#FFD700;">' + dados.email + '</a>'),
-    linhaTabela('📱 WhatsApp',  '<a href="https://wa.me/' + dados.whatsapp.replace(/\D/g,'') + '" style="color:#FFD700;">' + dados.whatsapp + '</a>'),
+    linhaTabela('📧 Email',     '<a href="' + emailHref + '" style="color:#FFD700;">' + escapeHtml(dados.email) + '</a>', true),
+    linhaTabela('📱 WhatsApp',  '<a href="' + whatsappHref + '" style="color:#FFD700;">' + escapeHtml(dados.whatsapp) + '</a>', true),
     linhaTabela('🛒 Serviço',   dados.servico),
     linhaTabela('💬 Mensagem',  dados.mensagem),
     linhaTabela('🌐 Origem',    dados.origem),
@@ -110,10 +139,10 @@ function enviarEmailNotificacao(dados) {
 
     /* Botões de acção rápida */
     '  <div style="padding:0 32px 32px;display:flex;gap:12px;">',
-    '    <a href="mailto:' + dados.email + '" style="display:inline-block;background:#FFD700;color:#0A0A0A;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;">',
+    '    <a href="' + emailHref + '" style="display:inline-block;background:#FFD700;color:#0A0A0A;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;">',
     '      ✉️ Responder por Email',
     '    </a>',
-    '    <a href="https://wa.me/' + dados.whatsapp.replace(/\D/g,'') + '?text=' + encodeURIComponent('Olá ' + dados.nome + '! Vi o teu pedido no site da Filho Rico Digital e quero saber mais sobre como podemos ajudar-te. 🚀') + '" style="display:inline-block;background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;">',
+    '    <a href="' + whatsappHref + '?text=' + encodeURIComponent('Olá ' + dados.nome + '! Vi o teu pedido no site da Filho Rico Digital e quero saber mais sobre como podemos ajudar-te. 🚀') + '" style="display:inline-block;background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;">',
     '      💬 Responder no WhatsApp',
     '    </a>',
     '  </div>',
@@ -139,7 +168,7 @@ function enviarEmailNotificacao(dados) {
     '🌐 Origem:    ' + dados.origem,
     '━━━━━━━━━━━━━━━━━━━━━━━━━━',
     'Responde directamente a este email ou abre o WhatsApp:',
-    'https://wa.me/' + dados.whatsapp.replace(/\D/g,''),
+    whatsappHref,
   ].join('\n');
 
   GmailApp.sendEmail(
@@ -151,11 +180,12 @@ function enviarEmailNotificacao(dados) {
 }
 
 /* ── Gera uma linha da tabela HTML do email ─────── */
-function linhaTabela(rotulo, valor) {
+function linhaTabela(rotulo, valor, valorJaSeguro) {
+  var valorHtml = valorJaSeguro ? valor : escapeHtml(valor);
   return [
     '<tr>',
     '  <td style="padding:10px 16px 10px 0;color:#FFD700;font-weight:bold;font-size:13px;vertical-align:top;white-space:nowrap;width:120px;">' + rotulo + '</td>',
-    '  <td style="padding:10px 0;color:#F2F0EA;font-size:14px;border-bottom:1px solid #2A2A2A;">' + valor + '</td>',
+    '  <td style="padding:10px 0;color:#F2F0EA;font-size:14px;border-bottom:1px solid #2A2A2A;">' + valorHtml + '</td>',
     '</tr>',
   ].join('');
 }
@@ -187,13 +217,13 @@ function garantirCabecalhos(folha) {
 /* ── Grava nova linha com zebra ──────────────────── */
 function gravarLinha(folha, dados) {
   folha.appendRow([
-    dados.dataEnvio,
-    dados.nome,
-    dados.email,
-    dados.whatsapp,
-    dados.servico,
-    dados.mensagem,
-    dados.origem,
+    protegerCelula(dados.dataEnvio),
+    protegerCelula(dados.nome),
+    protegerCelula(dados.email),
+    protegerCelula(dados.whatsapp),
+    protegerCelula(dados.servico),
+    protegerCelula(dados.mensagem),
+    protegerCelula(dados.origem),
   ]);
 
   var ultimaLinha = folha.getLastRow();
@@ -205,6 +235,182 @@ function gravarLinha(folha, dados) {
 }
 
 /* ── Helpers ─────────────────────────────────────── */
+function obterParametros(e) {
+  if (!e || !e.parameter) {
+    throw new Error('Pedido invalido.');
+  }
+  return e.parameter;
+}
+
+function validarToken(p) {
+  if (limpar(p.tokenSeguranca) !== SECURITY_TOKEN) {
+    throw new Error('Token de seguranca invalido.');
+  }
+}
+
+function validarAntiSpam(p) {
+  if (limpar(p.empresa) || limpar(p.website) || limpar(p.url)) {
+    throw new Error('Pedido recusado por anti-spam.');
+  }
+
+  validarTempoFormulario(p.tempoInicio);
+  validarNonceUnico(p.nonceCliente);
+}
+
+function validarTempoFormulario(valor) {
+  var inicio = Number(valor);
+  var idade = Date.now() - inicio;
+
+  if (!isFinite(inicio) || idade < TEMPO_MINIMO_ENVIO_MS || idade > TEMPO_MAXIMO_ENVIO_MS) {
+    throw new Error('Formulario expirado ou enviado rapido demais.');
+  }
+}
+
+function validarNonceUnico(valor) {
+  var nonce = limpar(valor);
+  if (!/^[a-f0-9]{16,64}$/i.test(nonce)) {
+    throw new Error('Sessao do formulario invalida.');
+  }
+
+  var cache = CacheService.getScriptCache();
+  var chave = 'nonce:' + nonce;
+  if (cache.get(chave)) {
+    throw new Error('Pedido duplicado recusado.');
+  }
+  cache.put(chave, '1', Math.ceil(TEMPO_MAXIMO_ENVIO_MS / 1000));
+}
+
+function validarRateLimit(dados) {
+  var cache = CacheService.getScriptCache();
+  var chaves = [
+    'email:' + hashValor(dados.email),
+    'phone:' + hashValor(dados.whatsapp),
+  ];
+
+  for (var i = 0; i < chaves.length; i++) {
+    if (cache.get(chaves[i])) {
+      throw new Error('Aguarda antes de enviar outro pedido.');
+    }
+  }
+
+  for (var j = 0; j < chaves.length; j++) {
+    cache.put(chaves[j], '1', RATE_LIMIT_SEGUNDOS);
+  }
+}
+
+function validarNomeEntrada(valor) {
+  var nome = sanitizarTexto(valor, LIMITES_FORMULARIO.nomeMax);
+  var letras = nome.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ]/g, '');
+
+  if (
+    nome.length < LIMITES_FORMULARIO.nomeMin ||
+    letras.length < LIMITES_FORMULARIO.nomeMin ||
+    /[<>{}\[\]\\]/.test(nome) ||
+    contemPadraoPerigoso(nome)
+  ) {
+    throw new Error('Nome invalido.');
+  }
+
+  return nome;
+}
+
+function validarEmailEntrada(valor) {
+  var email = sanitizarTexto(valor, LIMITES_FORMULARIO.emailMax).toLowerCase();
+  if (
+    email.length > LIMITES_FORMULARIO.emailMax ||
+    !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email) ||
+    contemPadraoPerigoso(email)
+  ) {
+    throw new Error('Email invalido.');
+  }
+
+  return email;
+}
+
+function validarWhatsappEntrada(valor) {
+  var digitos = sanitizarTexto(valor, 32).replace(/\D/g, '').replace(/^00/, '');
+  if (
+    digitos.length < LIMITES_FORMULARIO.whatsappMin ||
+    digitos.length > LIMITES_FORMULARIO.whatsappMax
+  ) {
+    throw new Error('WhatsApp invalido.');
+  }
+
+  return '+' + digitos;
+}
+
+function validarServicoEntrada(valor) {
+  var servico = limpar(valor);
+  if (SERVICOS_PERMITIDOS[servico]) {
+    return SERVICOS_PERMITIDOS[servico];
+  }
+
+  for (var codigo in SERVICOS_PERMITIDOS) {
+    if (SERVICOS_PERMITIDOS[codigo] === servico) {
+      return SERVICOS_PERMITIDOS[codigo];
+    }
+  }
+
+  throw new Error('Servico invalido.');
+}
+
+function validarMensagemEntrada(valor) {
+  var mensagem = sanitizarTexto(valor, LIMITES_FORMULARIO.mensagemMax);
+  if (!mensagem) return 'Sem mensagem.';
+
+  if (contarLinks(mensagem) > 2 || contemPadraoPerigoso(mensagem)) {
+    throw new Error('Mensagem invalida.');
+  }
+
+  return mensagem;
+}
+
+function sanitizarTexto(valor, limite) {
+  var texto = limpar(valor);
+  if (texto.normalize) texto = texto.normalize('NFKC');
+
+  texto = texto
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/[<>]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return texto.slice(0, limite);
+}
+
+function contarLinks(texto) {
+  var matches = String(texto || '').match(/https?:\/\/|www\.|bit\.ly|tinyurl\.com/gi);
+  return matches ? matches.length : 0;
+}
+
+function contemPadraoPerigoso(texto) {
+  return /(<\s*script|javascript:|data:text\/html|on\w+\s*=|union\s+select|drop\s+table|insert\s+into|delete\s+from)/i
+    .test(String(texto || ''));
+}
+
+function protegerCelula(valor) {
+  var texto = String(valor || '');
+  return /^[=+\-@]/.test(texto) ? "'" + texto : texto;
+}
+
+function hashValor(valor) {
+  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(valor || ''));
+  return Utilities.base64EncodeWebSafe(bytes).slice(0, 32);
+}
+
+function escapeHtml(valor) {
+  return String(valor || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function limparAssunto(valor) {
+  return String(valor || '').replace(/[\r\n]+/g, ' ').slice(0, 120);
+}
+
 function formatarDataAgora() {
   return Utilities.formatDate(new Date(), 'Africa/Luanda', 'dd/MM/yyyy HH:mm');
 }
@@ -227,19 +433,15 @@ function responderComErro(mensagemErro) {
 
 /* ═══════════════════════════════════════════════════
    doGet — testa o script directamente no browser.
-   Acede à URL do script com os parâmetros:
-   ?nome=Teste&email=teste@gmail.com&whatsapp=244923000000
-   &servico=Marketing&mensagem=Teste
+   Por segurança, leads só são aceites por POST validado.
    ═══════════════════════════════════════════════════ */
 function doGet(e) {
-  if (e && e.parameter && e.parameter.nome) {
-    return doPost(e);
-  }
   return ContentService
     .createTextOutput(JSON.stringify({
       status:  'online',
       projeto: 'Filho Rico Digital — Captação de Leads',
-      versao:  '2.0',
+      versao:  '2.1-seguro',
+      metodos: ['POST'],
     }))
     .setMimeType(ContentService.MimeType.JSON);
 }

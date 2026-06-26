@@ -52,6 +52,20 @@ A planilha de leads contém:
 
 ---
 
+## 🔐 Segurança do Formulário
+
+O projeto inclui validação em duas camadas:
+
+- Token de segurança enviado pelo formulário e validado no Apps Script
+- Honeypot anti-bot, nonce de uso único e tempo mínimo de preenchimento
+- Rate limit por email e WhatsApp no Apps Script
+- Allowlist de serviços, validação de email/telefone e limites de tamanho
+- Sanitização de HTML/padrões suspeitos e proteção contra formula injection no Google Sheets
+
+Antes de publicar, troca `FORM_SECURITY_TOKEN` em `script.js` e `SECURITY_TOKEN` em `google-apps-script.js` pelo mesmo valor novo. Depois faz uma nova versão da implementação no Google Apps Script.
+
+---
+
 ## 🚀 Como Funciona
 
 1. O usuário preenche o formulário no site
